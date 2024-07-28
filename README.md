@@ -27,6 +27,7 @@ In Modified-ABC notation, the Crotchet or 1/4 note is always default.
 Then, the usual notes are all referred to by number, starting with a Breve (1), then Semi-breve (2) and Minim (3) and Crotchet (4) and so on.  The diagram below is a reference.  This number is written before the note name.
 
 e.g. 4d3 = a Crotchet (or Quarter note) on D3
+
 e.g. 3f2 = a Minim on note F2 etc.
 
 ![alt text](NoteNames.png)
@@ -41,6 +42,7 @@ The rest of the ABC notation still applies for sharps and flats etc.
 Words can be added in the usual way, but on the same line as the voice notes:
 
 e.g.
+
 [V:1] 3z0  > 3d3 | 3d3 > ^4c35d3 | 3b4  > 3f3 | 3a4 3g3- | w: A dream is a wish your heart makes_
 
 ### 4. Voice switch
