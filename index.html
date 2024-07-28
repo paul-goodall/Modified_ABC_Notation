@@ -1,0 +1,349 @@
+<!doctype html>
+<!--
+https://abcnotation.com/wiki/abc:standard:v2.1#broken_rhythm
+-->
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+<script src="https://cdn.jsdelivr.net/npm/abcjs@6.4.1/dist/abcjs-basic-min.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/abcjs@6.4.1/abcjs-audio.min.css">
+
+<style>
+textarea {
+  height:90%;
+  width: 100%;
+  max-width: 100%;
+  font-size: 12px;
+  font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+}
+.abcjs-highlight {
+fill: #0a9ecc;
+}
+.abcjs-cursor {
+stroke: red;
+}
+</style>
+
+<script type="text/javascript">
+
+function correct_modified_notes(abcstr) {
+  const notemap = {'A':0,'B':1,'C':2,'D':3,'E':4,'F':5,'G':6};
+  const notelen = {'0':'','1':'8','2':'4','3':'2','4':'1','5':'/2','6':'/4','7':'/8','8':'/16','9':''};
+
+  let result = abcstr.match(/[0-9][A-G][0-9]/gi);
+  let num_apos = 0;
+  let num_coma = 0;
+
+  if (result !== null) {
+  result.forEach(function myFunction(orig_s) {
+    num_apos = 0;
+    num_coma = 0;
+
+    let note_length = orig_s[0]*1;
+    let note_letter = orig_s[1].toUpperCase();
+    let note_number = orig_s[2];
+
+    let note_suffix = notelen[note_length];
+
+    let note_val = note_number*7 + notemap[note_letter];
+
+    // Middle-C is # 23
+    // The B above Middle-C is # 29
+    if(note_val > 29){
+      note_letter = note_letter.toLowerCase();
+      num_apos = Math.floor((note_val-29)/7);
+    }
+
+    if(note_val < 23){
+      num_coma = 1+Math.floor((23-note_val)/7);
+    }
+
+    for (let i = 0; i < num_apos; i++) {
+      note_letter += "'";
+    }
+    for (let i = 0; i < num_coma; i++) {
+      note_letter += ",";
+    }
+
+    let new_s = note_letter + '' + note_suffix;
+    abcstr = abcstr.replace(orig_s,new_s);
+  });
+  }
+  return abcstr;
+}
+
+function correct_modified_rests(abcstr) {
+  const notelen = {'0':'','1':'8','2':'4','3':'2','4':'1','5':'/2','6':'/4','7':'/8','8':'/16','9':''};
+
+  let result = abcstr.match(/[0-9][XZ][0-9]/gi);
+
+  if (result !== null) {
+  result.forEach(function myFunction(orig_s) {
+
+    let note_length = orig_s[0]*1;
+    let note_letter = orig_s[1].toLowerCase();
+
+    let note_suffix = notelen[note_length];
+
+    let new_s = note_letter + '' + note_suffix;
+    abcstr = abcstr.replace(orig_s,new_s);
+  });
+  }
+  return abcstr;
+}
+
+// Define a splitLines function:
+const splitLines = str => str.split(/\r?\n/);
+
+function switch_tracks_onoff(abcstr) {
+
+  let result = abcstr.match(/Voice V\:[0-9]\s+(on|off)\s*\n/g);
+
+  if (result !== null) {
+    result.forEach(function myFunction(orig_s) {
+
+      let voice_opts = orig_s.trim().replace('Voice ','');
+      abcstr = abcstr.replace(orig_s,'');
+
+      voice_opts = voice_opts.split(/\s+/g);
+      let voice_name  = voice_opts[0];
+      let voice_onoff = voice_opts[1].toLowerCase();
+
+      if(voice_onoff == 'off'){
+        let vn = voice_name.replace('[','').replace(']','');
+
+        // split the corpus into lines:
+        let abc_lines = splitLines(abcstr);
+        let mystr1 = new RegExp('^\\[' + vn + '\\]', 'g');
+        let mystr2 = new RegExp('^' + vn, 'g');
+        abc_lines.forEach(function myFunction(this_line) {
+          let result2 = this_line.match(mystr1);
+          if (result2 !== null) {
+            let new_line = '%' + this_line.replace(/w:/,'%w:');
+            abcstr = abcstr.replace(this_line, new_line);
+          }
+          let result3 = this_line.match(mystr2);
+          if (result3 !== null) {
+            let new_line = '%' + this_line;
+            abcstr = abcstr.replace(this_line, new_line);
+          }
+        });
+
+      }
+
+    });
+  }
+  return abcstr;
+}
+
+
+function correct_modified_abc(abcstr) {
+  let test = abcstr.split(/E\:\s*modified/g);
+
+  if(test.length > 1){
+    // Deal with the default note.  Should always be crotchet in modified land.
+    let default_note = abcstr.match(/L\:\s*[0-9]\/[0-9]\n/g);
+    abcstr = abcstr.replace(default_note,'L: 1/4\n');
+
+    abcstr = correct_modified_notes(abcstr);
+    abcstr = correct_modified_rests(abcstr);
+
+    // check whether to switch tracks on/off
+    abcstr = switch_tracks_onoff(abcstr);
+
+    abcstr = abcstr.replace(/%w:/g,'\n%w:');
+    abcstr = abcstr.replace(/\sw:/g,'\nw:');
+
+    var alink2 = document.getElementById("abc-download");
+    const file = new Blob([abcstr], { type: 'text/plain' });
+    alink2.href = URL.createObjectURL(file);
+    alink2.download = "score.abc";
+  }
+
+  return abcstr;
+}
+
+
+function load() {
+var visualOptions = { responsive: 'resize' };
+
+var abcString = document.getElementById("musiccode").value;
+abcString = correct_modified_abc(abcString);
+
+//alert('[' + abcString + ']');
+var visualObj = ABCJS.renderAbc("paper", abcString, visualOptions);
+
+var a = document.getElementById("midi-download");
+var midi = ABCJS.synth.getMidiFile(abcString, { midiOutputType: "encoded", chordsOff: false});
+a.setAttribute("href", midi);
+
+function activate() {
+    if (ABCJS.synth.supportsAudio()) {
+        var controlOptions = {
+            displayRestart: true,
+            displayPlay: true,
+            displayProgress: true,
+            displayClock: true
+        };
+        var synthControl = new ABCJS.synth.SynthController();
+        synthControl.load("#audio", cursorControl, controlOptions);
+        synthControl.disable(true);
+        var midiBuffer = new ABCJS.synth.CreateSynth();
+        midiBuffer.init({
+            visualObj: visualObj[0],
+            options: {
+
+            }
+
+        }).then(function () {
+            synthControl.setTune(visualObj[0], true).then(function (response) {
+            document.querySelector(".abcjs-inline-audio").classList.remove("disabled");
+            })
+        });
+    } else {
+        console.log("audio is not supported on this browser");
+    };
+}
+
+//document.querySelector(".activate-audio").addEventListener("click", activate);
+activate();
+
+
+function CursorControl(rootSelector) {
+    var self = this;
+
+// This demonstrates two methods of indicating where the music is.
+    // 1) An element is created that is moved along for each note.
+    // 2) The currently being played note is given a class so that it can be transformed.
+    self.cursor = null; // This is the svg element that will move with the music.
+    self.rootSelector = rootSelector; // This is the same selector as the renderAbc call uses.
+
+    self.onStart = function() {
+        // This is called when the timer starts so we know the svg has been drawn by now.
+        // Create the cursor and add it to the sheet music's svg.
+        var svg = document.querySelector(self.rootSelector + " svg");
+        self.cursor = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        self.cursor.setAttribute("class", "abcjs-cursor");
+        self.cursor.setAttributeNS(null, 'x1', 0);
+        self.cursor.setAttributeNS(null, 'y1', 0);
+        self.cursor.setAttributeNS(null, 'x2', 0);
+        self.cursor.setAttributeNS(null, 'y2', 0);
+        svg.appendChild(self.cursor);
+    };
+
+    self.removeSelection = function() {
+        // Unselect any previously selected notes.
+        var lastSelection = document.querySelectorAll(self.rootSelector + " .abcjs-highlight");
+        for (var k = 0; k < lastSelection.length; k++)
+            lastSelection[k].classList.remove("abcjs-highlight");
+    };
+
+
+    self.onEvent = function(ev) {
+
+        // This is called every time a note or a rest is reached and contains the coordinates of it.
+        if (ev.measureStart && ev.left === null)
+            return; // this was the second part of a tie across a measure line. Just ignore it.
+
+        self.removeSelection();
+
+        // Select the currently selected notes.
+        for (var i = 0; i < ev.elements.length; i++ ) {
+            var note = ev.elements[i];
+            for (var j = 0; j < note.length; j++) {
+                note[j].classList.add("abcjs-highlight");
+            }
+        }
+
+        // Move the cursor to the location of the current note.
+        if (self.cursor) {
+            self.cursor.setAttribute("x1", ev.left - 2);
+            self.cursor.setAttribute("x2", ev.left - 2);
+            self.cursor.setAttribute("y1", ev.top);
+            self.cursor.setAttribute("y2", ev.top + ev.height);
+        }
+
+
+
+    };
+    self.onFinished = function() {
+            self.removeSelection();
+
+        if (self.cursor) {
+            self.cursor.setAttribute("x1", 0);
+            self.cursor.setAttribute("x2", 0);
+            self.cursor.setAttribute("y1", 0);
+            self.cursor.setAttribute("y2", 0);
+        }
+
+
+    };
+}
+
+var cursorControl = new CursorControl("#paper");
+
+function onEvent(ev) {
+if (ev)
+cursorControl.onEvent(ev);
+else
+cursorControl.onFinished();
+}
+
+function startTimer() {
+    cursorControl.onStart();
+
+var timingCallbacks = new ABCJS.TimingCallbacks(visualObj[0], {
+    eventCallback: onEvent
+});
+timingCallbacks.start();
+}
+
+
+
+
+}
+</script>
+
+
+
+    <title>Script Editor</title>
+  </head>
+  <body onload="load()" style='background-color:lightgray;'>
+    <h1>Script Editor</h1>
+    <div class="container-fluid">
+      <div class="row align-items-start" style='height:700px'>
+        <div class="col-6 h-100 d-inline-block" style='background-color:gray'>
+          <button onclick="load()">Typeset Music</button><a id="midi-download" download="score.mid">Download MIDI</a><br/>
+          <textarea id="musiccode">
+X: 1
+T: Cooley's
+M: 4/4
+L: 1/8
+R: reel
+K: Emin
+|:D2|EB{c}BA B2 EB|~B2 AB dBAG|FDAD BDAD|FDAD dAFD|
+EBBA B2 EB|B2 AB defg|afe^c dBAF|DEFD E2:|
+|:gf|eB B2 efge|eB B2 gedB|A2 FA DAFA|A2 FA defg|
+eB B2 eBgB|eB B2 defg|afe^c dBAF|DEFD E2:|
+          </textarea>
+          <button onclick="load()">Typeset Music</button><a id="abc-download" download="score.abc">Download ABC</a><br/>
+        </div>
+        <div class="col-6 h-100 d-inline-block" style='background-color:white;overflow: auto; max-height: 100%;'>
+          <div id="audio"></div>
+          <div id="paper" style='overflow: auto; max-height: 100%;'></div>
+        </div>
+    </div>
+    </div>
+
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+  </body>
+</html>
