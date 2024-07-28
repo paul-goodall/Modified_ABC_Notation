@@ -18,7 +18,7 @@ E:modified
 without this, the wrapper will ignore modifications and treat everything as Original-flavour ABC.
 
 ### 1. Simplicity of Note nomenclature.
-I prefer to refer to notes as the appear on the Piano keys, where the first note is A0 and middle-C is C3.
+I prefer to refer to notes as they appear on the Piano keys, where the first note is A0 and middle-C is C3.
 
 This is more intuitive to me than using C for middle C, and then adding additional commas for octaves below, or apostrophes for octaves above.
 
