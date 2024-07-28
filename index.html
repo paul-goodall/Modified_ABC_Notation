@@ -321,16 +321,70 @@ timingCallbacks.start();
         <div class="col-6 h-100 d-inline-block" style='background-color:gray'>
           <button onclick="load()">Typeset Music</button><a id="midi-download" download="score.mid">Download MIDI</a><br/>
           <textarea id="musiccode">
+% Page Setup - if creating a PDF
+%%pagewidth      21cm
+%%pageheight     29.7cm
+%%topspace       0.5cm
+%%topmargin      1cm
+%%botmargin      0cm
+%%leftmargin     1cm
+%%rightmargin    1cm
+%%titlespace     0cm
+%%titlefont      Times-Bold 32
+%%subtitlefont   Times-Bold 24
+%%composerfont   Times 16
+%%vocalfont      Times-Roman 14
+%%staffsep       60pt
+%%sysstaffsep    20pt
+%%musicspace     1cm
+%%vocalspace     5pt
+%%measurenb      0
+%%barsperstaff   5
+%%scale          0.7
+% -------------------
 X: 1
-T: Cooley's
-M: 4/4
-L: 1/8
-R: reel
-K: Emin
-|:D2|EB{c}BA B2 EB|~B2 AB dBAG|FDAD BDAD|FDAD dAFD|
-EBBA B2 EB|B2 AB defg|afe^c dBAF|DEFD E2:|
-|:gf|eB B2 efge|eB B2 gedB|A2 FA DAFA|A2 FA defg|
-eB B2 eBgB|eB B2 defg|afe^c dBAF|DEFD E2:|
+T: Snippet from 'A Dream is a Wish'
+M: 2/2
+L: 1/4
+Q: 76
+R: Example of how to write a 4-part arrangement in Modified ABC notation
+R: Snippet example from: Arrangement by Audrey Snyder
+R: Snippet example from: Words and Music by Mack David, Al Hoffman and Jerry Livingston
+E: modified
+K: G
+% -------------------
+% Define the voices and assign an instrument to each:
+%
+V:1 name=Soprano clef=treble    snm=S
+%%MIDI program 54
+%
+V:2 name=Alto    clef=treble    snm=A
+%%MIDI program 54
+%
+V:3 name=Tenor   clef=treble-8  snm=T
+%%MIDI program 54
+%
+V:4 name=Bass    clef=bass      snm=B
+%%MIDI program 54
+% -------------------
+% Set Voice Track on/off - modified ABC only!
+Voice V:1 on
+Voice V:2 on
+Voice V:3 on
+Voice V:4 on
+% -------------------
+% The music
+[V:1] 3z0  > 3d3 | 3d3 > ^4c35d3 | 3b4  > 3f3 | 3a4 3g3- | w: A dream is a wish your heart makes_
+[V:2] 2z0        | (2b3          | ^2d3       | 2e3      | w: Oo,__
+[V:3] 2z0        | (2a4          | 2b4-       | 2b4-     | w: Oo,__
+[V:4] 2z0        | 2g2-          | 2g2-       | 2g2-     | w: Oo,__
+%
+[V:1] 2g3   | 3d3 > 3g3         | ^3d3 > 3f3 | 2e3- || w:  \- when you're fast a-sleep
+[V:2] ^2d3) | =3d3 > 3d3        | 3b3 > 3b3  | 2c3  || w: Oo, when you're fast a-sleep
+[V:3] 2b4)  | (4d4 4c4 4b4) 4b4 | 3a4 > 3a4  | 2a4  || w: Oo, when__ you're fast a-sleep
+[V:4] 2g2   | 3z0 4b3 4g2       | 3f2 > 3f2  | 2g2  || w: Oo, when you're fast a-sleep
+%
+
           </textarea>
           <button onclick="load()">Typeset Music</button><a id="abc-download" download="score.abc">Download ABC</a><br/>
         </div>
